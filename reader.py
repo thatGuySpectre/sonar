@@ -6,7 +6,7 @@ import serial
 import logging
 import yaml
 import numpy as np
-import PySimpleGUI as sg
+import PySimpleGUIWeb as sg
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
