@@ -58,6 +58,8 @@ fn main() -> ! {
             ufmt::uwriteln!(&mut serial, "{},{},{}", t1, t2, t3);
         }
 
+        while s1.is_low() || s2.is_low() || s3.is_low() {}
+
         arduino_hal::delay_ms(500);
     }
 }
