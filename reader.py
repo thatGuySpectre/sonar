@@ -104,14 +104,15 @@ if __name__=="__main__":
         line = ser.readline().decode().strip()
         logger.debug("serial message: " + line)
 
-        match line.split(","):
-            case ["misfire", *args]:
-                logging.info(line)
-            case [t1, t2, t3]:
-                pos = get_pos(t1, t2, t3, config)
-                r, phi = get_radial(pos)
-                update_view(window, r, phi)
-                window.read(timeout=0)
-                logging.info(f"(x,y)={pos[0], pos[1]} - (r, phi)={r, phi}")
+        l = line.split(",")
+        if line[0] == "misfire":
+            logging.info(line)
+        else:
+            t1, t2, t3 = l
+            pos = get_pos(t1, t2, t3, config)
+            r, phi = get_radial(pos)
+            update_view(window, r, phi)
+            window.read(timeout=0)
+            logging.info(f"(x,y)={pos[0], pos[1]} - (r, phi)={r, phi}")
 
 
