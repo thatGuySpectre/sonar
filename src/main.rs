@@ -10,16 +10,6 @@ fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
 
-    /*
-     * For examples (and inspiration), head to
-     *
-     *     https://github.com/Rahix/avr-hal/tree/main/examples
-     *
-     * NOTE: Not all examples were ported to all boards!  There is a good chance though, that code
-     * for a different board can be adapted for yours.  The Arduino Uno currently has the most
-     * examples available.
-     */
-
     let s1 = pins.d11;
     let s2 = pins.d12;
     let s3 = pins.d13;
@@ -49,19 +39,20 @@ fn main() -> ! {
         let mut t: u16;
 
         while ({t = timer.tcnt1.read().bits(); t} < 25000) && (t1 == 0 || t2 == 0 || t3 == 0) {
-            if (t1 != 0) && s1.is_low() {
+            // ufmt::uwriteln!(&mut serial, "t {}, {}, {} {} {}", t, s1.is_low(), t1, t2, t3);
+            if (t1 == 0) && s1.is_low() {
                 t1 = t;
             }
-            if (t2 != 0) && s3.is_low() {
+            if (t2 == 0) && s3.is_low() {
                 t2 = t;
             }
-            if (t3 != 0) && s3.is_low() {
+            if (t3 == 0) && s3.is_low() {
                 t3 = t;
             }
         }
 
-        if (t1 == 0) { // || t2 == 0 || t3 == 0) {
-            ufmt::uwriteln!(&mut serial, "{}", s1.is_low());
+        if t >= 25000 {
+            ufmt::uwriteln!(&mut serial, "misfire {}, {}, {}, {}", t1, t2, t3, t);
         }
         else {
             ufmt::uwriteln!(&mut serial, "{},{},{}", t1, t2, t3);

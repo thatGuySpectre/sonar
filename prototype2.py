@@ -1,6 +1,9 @@
 #!/bin/python3
-
+import math
+import random
 import time
+
+import numpy
 import scipy.optimize
 
 def error_func(mics, vals):
@@ -70,12 +73,41 @@ def optimize(mics):
     return out.x
 
 
+def noise_mics(mics, n=0.1):
+    mics = [(i, j, k * (1 + (-0.5 + random.random()) * n)) for (i, j, k) in mics]
+    min_r = min(mic[2] for mic in mics)
+    mics = [(i, j, k - min_r) for (i, j, k) in mics]
+    return mics
+
+
+def get_r_phi(x, y, r):
+    r = (x**2 + y**2)**0.5
+    phi = math.atan2(x, y) / math.pi * 180
+
+    return r, phi
+
+
 if __name__=="__main__":
     mics = [
-        (0, 0, 2),
-        (1, 0, 1),
-        (0, 1, 5**0.5)
+        (0, -1, 2**0.5),
+        (1, 0, 2),
+        (0, 1, 2**0.5)
     ]
 
-    x = optimize(mics)
-    print(x)
+    rs, phis = [], []
+
+    for noise in range(10):
+
+        for i in range(100):
+
+            n_mics = noise_mics(mics, 0.02 * noise)
+    #        print(n_mics)
+
+            xs = optimize(n_mics)
+    #        print(xs)
+    #        print("r={:2f} phi={:2f}°".format(*get_r_phi(*xs)))
+            r, phi = get_r_phi(*xs)
+            rs.append(r)
+            phis.append(phi)
+
+        print(f"noise = {noise * 0.05} \nr = ({numpy.mean(rs):.2f}+-{numpy.std(rs):.2f}) \nphi = ({numpy.mean(phis):.2f}+-{numpy.std(phis):.2f})°\n")
