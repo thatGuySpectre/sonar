@@ -15,8 +15,6 @@ logging.basicConfig(level=logging.DEBUG)
 def error_func(mics, vals):
     x, y, r = vals
     total = 0
-    #logger.debug(vals)
-    #logger.debug(mics)
     for mic in mics:
         xm, ym, c = mic
         total += (
@@ -50,13 +48,17 @@ def grad_err_func(mics, vals):
     return np.array((dx, dy, dr))
 
 
-def get_pos(t1, t2, t3, conf): 
+def get_pos(r1, r2, r3, conf):
     x0 = np.array((0, 0, 0))
     mics = conf["mics"]
-    mics = [np.array((*m, float(t))) for (m, t) in zip(mics, (t1, t2, t3))]
+    mics = [np.array((*m, float(t))) for (m, t) in zip(mics, (r1, r2, r3))]
     logger.info(mics)
-    out = scipy.optimize.minimize(lambda x: error_func(mics, x), x0, method="BFGS",
-                                  jac = lambda x: grad_err_func(mics, x))
+    out = scipy.optimize.minimize(
+        fun=lambda x: error_func(mics, x),
+        x0=x0,
+        method="BFGS",
+        jac=lambda x: grad_err_func(mics, x)
+    )
     return out.x
 
 

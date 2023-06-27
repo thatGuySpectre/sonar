@@ -41,7 +41,7 @@ fn main() -> ! {
         timer.tcnt1.write(|w| w.bits(0));
 
         let mut t: u16 = 0;
-
+        
         while (t < 25000) && (t1 == 0 || t2 == 0 || t3 == 0) {
             t = timer.tcnt1.read().bits();
             //ufmt::uwriteln!(&mut serial, "t {}, {}, {}, {}", t, t1, t2, t3);
