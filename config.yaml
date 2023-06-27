@@ -1,9 +1,11 @@
 rate: 57600
 port: /dev/ttyACM0
 mics:
-  - - -1.
-    - 0.
-  - - 1.
+  - - 0.2
     - 0.
   - - 0.
-    - 1.
+    - 0.
+  - - 0.
+    - 0.2
+speed: 343
+scale_factor: 5820

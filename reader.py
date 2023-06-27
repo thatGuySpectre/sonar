@@ -6,17 +6,17 @@ import serial
 import logging
 import yaml
 import numpy as np
-import PySimpleGUIWeb as sg
+import PySimpleGUI as sg
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def error_func(mics, vals):
     x, y, r = vals
     total = 0
-    logger.debug(vals)
-    logger.debug(mics)
+    #logger.debug(vals)
+    #logger.debug(mics)
     for mic in mics:
         xm, ym, c = mic
         total += (
@@ -54,14 +54,16 @@ def get_pos(t1, t2, t3, conf):
     x0 = np.array((0, 0, 0))
     mics = conf["mics"]
     mics = [np.array((*m, float(t))) for (m, t) in zip(mics, (t1, t2, t3))]
-    out = scipy.optimize.minimize(lambda x: error_func(mics, x), x0, method="BFGS", 
+    logger.info(mics)
+    out = scipy.optimize.minimize(lambda x: error_func(mics, x), x0, method="BFGS",
                                   jac = lambda x: grad_err_func(mics, x))
     return out.x
 
 
 def get_radial(x0):
-    x, y, r = x0
-    phi = math.atan2(x, y) / math.pi * 180
+    x, y, _ = x0
+    r = (x**2 + y**2)**0.5
+    phi = math.atan2(y, x) / math.pi * 180
 
     return r, phi
 
@@ -74,13 +76,14 @@ def update_view(window, distance, angle):
 
     arrow_length = 120
     arrow_tip = (
-        200 + arrow_length * math.sin(math.radians(angle)),
-        200 + arrow_length * math.cos(math.radians(angle))
+        200 + arrow_length * - math.cos(math.radians(angle)),
+        200 + arrow_length * - math.sin(math.radians(angle))
     )
     graph.draw_line((200, 200), arrow_tip, width=2)
 
     # Update the distance text
-    window["dist"].update(f'{distance:.2f} units')
+    window["dist"].update(f'{distance:.2f} meters')
+    window["angle"].update(f"{angle:.2f} degrees from x")
 
 
 if __name__=="__main__":
@@ -90,7 +93,8 @@ if __name__=="__main__":
     layout = [
     [sg.Graph(canvas_size=(400, 400), graph_bottom_left=(0, 0), graph_top_right=(400, 400), key='graph', background_color='white')],
     [sg.Text('Distance: ', justification='center')],
-    [sg.Text('', size=(10, 1), key='dist', justification='center', font=("Arial", 20))]
+    [sg.Text('', size=(40, 1), key='dist', justification='center', font=("Arial", 20))],
+    [sg.Text('', size=(40, 1), key='angle', justification='center', font=("Arial", 20))]
 ]
 
     window = sg.Window("Sonar", layout=layout, finalize=True)
@@ -105,11 +109,18 @@ if __name__=="__main__":
         logger.debug("serial message: " + line)
 
         l = line.split(",")
-        if line[0] == "misfire":
+        if len(l) != 3:
             logging.info(line)
         else:
             t1, t2, t3 = l
-            pos = get_pos(t1, t2, t3, config)
+            logger.info((t1, ":", t2, ":", t3))
+            m1 = int(t1) / config["scale_factor"]
+            m2 = int(t2) / config["scale_factor"]
+            m3 = int(t3) / config["scale_factor"]
+            pos = get_pos(m1, m2, m3, config)
+            logger.info(pos)
+            with open("buzz_-3_10.txt", "a") as f:
+                f.write(f"{pos}\n")
             r, phi = get_radial(pos)
             update_view(window, r, phi)
             window.read(timeout=0)
